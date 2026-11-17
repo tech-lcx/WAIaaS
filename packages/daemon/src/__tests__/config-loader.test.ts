@@ -731,11 +731,12 @@ jupiter_swap_max_price_impact_pct = 2.0
     expect(() => loadConfig(dir)).toThrow();
   });
 
-  it('DaemonConfigSchema actions section has 13 keys', () => {
+  it('DaemonConfigSchema actions section has 23 keys', () => {
     const dir = saveTempDir(createTempDir());
     const config = loadConfig(dir);
     const actionsKeys = Object.keys(config.actions);
-    expect(actionsKeys).toHaveLength(18); // 8 Jupiter + 5 0x + 5 LiFi
+    expect(actionsKeys).toHaveLength(23); // 8 Jupiter + 5 0x + 5 LCX Liberty DEX + 5 LiFi
+    expect(config.actions.lcx_liberty_swap_enabled).toBe(false);
   });
 });
 

@@ -514,7 +514,7 @@ export class HotReloadOrchestrator {
 
     // Built-in provider names (must match keys used in registerBuiltInProviders)
     const BUILTIN_NAMES = [
-      'jupiter_swap', 'zerox_swap', 'lifi',
+      'jupiter_swap', 'zerox_swap', 'lcx_liberty_swap', 'lifi',
       'lido_staking', 'jito_staking',
       'aave_v3', 'kamino',
       'pendle_yield', 'drift_perp',

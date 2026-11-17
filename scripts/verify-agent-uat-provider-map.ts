@@ -26,6 +26,7 @@ const PROVIDER_SCENARIO_MAP: Record<string, string> = {
   'jito-staking': 'defi/jito-staking.md',
   'jupiter-swap': 'defi/jupiter-swap.md',
   'kamino': 'defi/kamino-lending.md',
+  'lcx-liberty-swap': 'defi/lcx-liberty-swap.md',
   'lido-staking': 'defi/lido-staking.md',
   'lifi': 'defi/lifi-bridge.md',
   'pendle': 'defi/pendle-yield.md',

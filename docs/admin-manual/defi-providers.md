@@ -34,6 +34,7 @@ curl -s -X PUT http://localhost:3100/v1/admin/settings \
 |----------|---------|-------------|------|-----------|
 | Jupiter Swap | `actions.jupiter_swap_enabled` | No | Solana | Yes |
 | 0x Swap | `actions.zerox_swap_enabled` | Yes (`actions.zerox_api_key`) | EVM | Yes |
+| LCX Liberty DEX | `actions.lcx_liberty_swap_enabled` | Yes (`actions.lcx_liberty_swap_api_key`) | EVM | No |
 | LI.FI Bridge | `actions.lifi_enabled` | No (선택적: `actions.lifi_api_key`) | EVM + Solana | Yes |
 | Lido Staking | `actions.lido_staking_enabled` | No | EVM | Yes |
 | Jito Staking | `actions.jito_staking_enabled` | No | Solana | Yes |
@@ -59,6 +60,17 @@ curl -s -X PUT http://localhost:3100/v1/admin/settings \
   -H 'Content-Type: application/json' \
   -H 'X-Master-Password: <password>' \
   -d '{"settings": [{"key": "actions.zerox_api_key", "value": "your-0x-api-key"}]}'
+```
+
+### LCX Liberty DEX API 키
+
+LCX Liberty DEX는 기본 비활성입니다. 활성화와 API 키 등록을 함께 해야 동작합니다. 무료 키는 https://dex.lcx.com/dashboard 에서 발급받을 수 있습니다.
+
+```bash
+curl -s -X PUT http://localhost:3100/v1/admin/settings \
+  -H 'Content-Type: application/json' \
+  -H 'X-Master-Password: <password>' \
+  -d '{"settings": [{"key": "actions.lcx_liberty_swap_enabled", "value": "true"}, {"key": "actions.lcx_liberty_swap_api_key", "value": "your-lcx-api-key"}]}'
 ```
 
 ### LI.FI API 키 (선택적)

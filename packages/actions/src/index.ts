@@ -8,6 +8,7 @@ import type { IActionProvider, ILogger, NetworkType } from '@waiaas/core';
 import { deriveEnvironment } from '@waiaas/core';
 import { JupiterSwapActionProvider } from './providers/jupiter-swap/index.js';
 import { ZeroExSwapActionProvider } from './providers/zerox-swap/index.js';
+import { LcxLibertySwapActionProvider } from './providers/lcx-liberty-swap/index.js';
 import { LiFiActionProvider } from './providers/lifi/index.js';
 import { LidoStakingActionProvider } from './providers/lido-staking/index.js';
 import { getLidoAddresses, type LidoStakingConfig } from './providers/lido-staking/config.js';
@@ -43,6 +44,11 @@ export type { JupiterSwapConfig } from './providers/jupiter-swap/config.js';
 export { ZeroExSwapActionProvider } from './providers/zerox-swap/index.js';
 export { ALLOWANCE_HOLDER_ADDRESSES, ZEROX_SWAP_DEFAULTS, CHAIN_ID_MAP, getAllowanceHolderAddress } from './providers/zerox-swap/config.js';
 export type { ZeroExSwapConfig } from './providers/zerox-swap/config.js';
+
+export { LcxLibertySwapActionProvider } from './providers/lcx-liberty-swap/index.js';
+export { LCX_LIBERTY_ROUTER_ADDRESSES, LCX_LIBERTY_SWAP_DEFAULTS, getLcxLibertyRouterAddress } from './providers/lcx-liberty-swap/config.js';
+export type { LcxLibertySwapConfig } from './providers/lcx-liberty-swap/config.js';
+export { LCX_ROUTER_ABI } from './providers/lcx-liberty-swap/router-calldata.js';
 
 export { LiFiActionProvider } from './providers/lifi/index.js';
 export { LIFI_DEFAULTS, LIFI_CHAIN_MAP, getLiFiChainId } from './providers/lifi/config.js';
@@ -214,6 +220,20 @@ export function registerBuiltInProviders(
           requestTimeoutMs: Number(settingsReader.get('actions.zerox_swap_request_timeout_ms')),
         };
         return new ZeroExSwapActionProvider(config, logger);
+      },
+    },
+    {
+      key: 'lcx_liberty_swap',
+      enabledKey: 'actions.lcx_liberty_swap_enabled',
+      factory: () => {
+        const config: Partial<import('./providers/lcx-liberty-swap/config.js').LcxLibertySwapConfig> = {
+          enabled: true,
+          apiKey: settingsReader.get('actions.lcx_liberty_swap_api_key'),
+          defaultSlippageBps: Number(settingsReader.get('actions.lcx_liberty_swap_default_slippage_bps')),
+          maxSlippageBps: Number(settingsReader.get('actions.lcx_liberty_swap_max_slippage_bps')),
+          requestTimeoutMs: Number(settingsReader.get('actions.lcx_liberty_swap_request_timeout_ms')),
+        };
+        return new LcxLibertySwapActionProvider(config, logger);
       },
     },
     {

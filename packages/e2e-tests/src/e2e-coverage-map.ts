@@ -20,6 +20,7 @@ export const providerCoverage: Record<string, string[]> = {
   'drift': ['advanced-defi-settings-push-relay.ts'],
   'jupiter-swap': ['advanced-defi-settings-push-relay.ts'],
   'kamino': ['advanced-defi-settings-push-relay.ts'],
+  'lcx-liberty-swap': ['advanced-defi-settings-push-relay.ts'],
   'lifi': ['advanced-defi-settings-push-relay.ts'],
   'pendle': ['advanced-defi-settings-push-relay.ts'],
   'polymarket': ['onchain-polymarket.ts'],

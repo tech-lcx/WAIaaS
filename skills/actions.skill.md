@@ -2,7 +2,7 @@
 name: "WAIaaS Actions"
 description: "Action Provider framework: list providers, execute DeFi actions through the 6-stage transaction pipeline"
 category: "api"
-tags: [wallet, blockchain, defi, actions, waiass, jupiter, 0x, swap, lifi, bridge, cross-chain, lido, jito, staking, liquid-staking, pendle, yield, pt, yt, drift, perp, perpetual, leverage, futures, dcent-swap, dcent, aggregator, across, across-bridge, polymarket, prediction-market, clob, ctf]
+tags: [wallet, blockchain, defi, actions, waiass, jupiter, 0x, swap, lifi, bridge, cross-chain, lido, jito, staking, liquid-staking, pendle, yield, pt, yt, drift, perp, perpetual, leverage, futures, dcent-swap, dcent, aggregator, across, across-bridge, lcx-liberty-dex, polymarket, prediction-market, clob, ctf]
 version: "2.9.0-rc"
 dispatch:
   kind: "tool"
@@ -1832,7 +1832,85 @@ curl -s -X POST http://localhost:3100/v1/actions/polymarket_order/pm_buy \
 
 See **polymarket.skill.md** for full reference.
 
-## 16. Policy Integration
+## 16. LCX Liberty DEX Swap -- Built-in Provider (EVM)
+
+The LCX Liberty DEX provider uses the [LCX Liberty DEX swap API](https://dex.lcx.com/docs) (quote, then build) for same-chain token swaps on the EVM mainnets WAIaaS supports. It is **off by default**: nothing changes until an operator enables it and sets an API key.
+
+### Configuration
+
+Enable via **Admin UI > DeFi (`#/defi`) > Lcx Liberty Swap**. An API key is **required** (`requiresApiKey: true`); a free key is available at [dex.lcx.com/dashboard](https://dex.lcx.com/dashboard).
+
+| Setting | Env Variable | Default | Description |
+| ------- | ------------ | ------- | ----------- |
+| Enabled | `WAIAAS_ACTIONS_LCX_LIBERTY_SWAP_ENABLED` | `false` | Enable the LCX Liberty DEX provider |
+| API Key | `WAIAAS_ACTIONS_LCX_LIBERTY_SWAP_API_KEY` | (empty) | **Required.** Sent as `Authorization: Bearer <key>` |
+| Default Slippage | `WAIAAS_ACTIONS_LCX_LIBERTY_SWAP_DEFAULT_SLIPPAGE_BPS` | `50` | Default slippage (0.5%) |
+| Max Slippage | `WAIAAS_ACTIONS_LCX_LIBERTY_SWAP_MAX_SLIPPAGE_BPS` | `500` | Max slippage clamp (5%) |
+| Timeout | `WAIAAS_ACTIONS_LCX_LIBERTY_SWAP_REQUEST_TIMEOUT_MS` | `10000` | API request timeout |
+
+### Swap Parameters
+
+Same parameters as 0x Swap (Section 4): `sellToken`, `buyToken`, `sellAmount` (or `humanSellAmount` + `decimals`), `slippageBps`, `chainId`.
+
+- Native coin: `0x0000000000000000000000000000000000000000`. The 0x placeholder `0xEeee...EEeE` is accepted as an alias.
+- `chainId` defaults to 1 and must match the `network` the request is sent on.
+
+### Supported EVM Networks
+
+| Network | Chain ID | WAIaaS Network Name | Router (swap target and approval spender) |
+| ------- | -------- | ------------------- | ----------------------------------------- |
+| Ethereum | 1 | `ethereum-mainnet` | `0x0000000000b1ae06c96aB73FF4360d7AeAaB56F0` |
+| Optimism | 10 | `optimism-mainnet` | `0x0000000000b1ae06c96aB73FF4360d7AeAaB56F0` |
+| Base | 8453 | `base-mainnet` | `0x0000000000b1ae06c96aB73FF4360d7AeAaB56F0` |
+| Arbitrum | 42161 | `arbitrum-mainnet` | `0x0000000000b1ae06c96aB73FF4360d7AeAaB56F0` |
+| Polygon | 137 | `polygon-mainnet` | `0x0000000000654902B6Ed6cC240cc81CB4c4a3dff` |
+| HyperEVM | 999 | `hyperevm-mainnet` | `0x0000000000654902B6Ed6cC240cc81CB4c4a3dff` |
+
+Other chain IDs are refused before any API call.
+
+### Safety Features
+
+Before anything reaches the pipeline, the quote and the built transaction are checked against the request. Any mismatch fails the action with `ACTION_RESOLVE_FAILED` and nothing is signed:
+
+- quote `spender` and built `swap.to` equal the published router for the chain;
+- quote and build `chainId` equal the requested chain, and `routerDeployed` is true;
+- quote input amount and input/output tokens equal the request;
+- build `minAmountOut` equals the quote's `minimumAmount`;
+- `swap.value` equals `sellAmount` for native sells and `0` otherwise;
+- `swap.data` decodes as one of the five router entrypoints (`swapSplit`, `swapSplitWithFee`, `swapSplitViaPropAMM`, `swapSplitWithPropAMMSplit`, `makerSwap`), and its own arguments match: recipient is the wallet, sold amount and tokens equal the request, `minAmountOut` is at least the quoted floor, and the deadline is in the future. A `makerSwap` maker leg must be either Bebop's settlement contracts or completely empty, and sell no more than the total. The fee wrappers must carry no integrator, and a prop-AMM split's venue amount may not exceed the total.
+
+The swap recipient is always the wallet itself. Same-token swaps and zero amounts are refused before the API call.
+
+### Multi-step Execution
+
+As with 0x Swap: ERC-20 sells return `[approve, swap]`, where the approval is for exactly `sellAmount` to the router (never unlimited). Native sells return `[swap]` with `value = sellAmount`.
+
+### Policy
+
+The provider goes through the same policy path as the other built-in providers (Section 17): every request is tagged `actionProvider: lcx_liberty_swap`, provider-trust skips CONTRACT_WHITELIST only while `actions.lcx_liberty_swap_enabled` is `true`, and SPENDING_LIMIT, METHOD_WHITELIST, WHITELIST and the action tier override (`actions.lcx_liberty_swap_swap_tier`) apply unchanged. The default tier is INSTANT, as for 0x.
+
+### Example: Swap 0.01 ETH to USDC on Base
+
+```bash
+curl -s -X POST http://localhost:3100/v1/actions/lcx_liberty_swap/swap \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer wai_sess_eyJ...' \
+  -d '{
+    "network": "base-mainnet",
+    "params": {
+      "sellToken": "0x0000000000000000000000000000000000000000",
+      "buyToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "sellAmount": "10000000000000000",
+      "chainId": 8453
+    }
+  }'
+```
+
+**MCP Tool:** `action_lcx_liberty_swap_swap` (same parameters).
+
+**SDK:** `client.executeAction('lcx_liberty_swap', 'swap', { params: { ... } })`.
+
+## 17. Policy Integration
 
 ### CONTRACT_WHITELIST
 
@@ -1840,6 +1918,7 @@ Action providers resolve to `CONTRACT_CALL` transactions targeting external prot
 
 **Jupiter Swap:** Jupiter program `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4`.
 **0x Swap:** AllowanceHolder contract `0x0000000000001fF3684f28c67538d4D072C22734`.
+**LCX Liberty DEX:** Router `0x0000000000b1ae06c96aB73FF4360d7AeAaB56F0` (Ethereum, Optimism, Base, Arbitrum) and `0x0000000000654902B6Ed6cC240cc81CB4c4a3dff` (Polygon, HyperEVM).
 **LI.FI Bridge:** Routes are resolved dynamically by the LI.FI API (no fixed contract address). The target contract varies per bridge route and chain.
 
 ### Provider-Trust Bypass
@@ -1859,12 +1938,12 @@ The swap/bridge input amount is converted to USD via IPriceOracle and evaluated 
 
 **LI.FI bridge reservation lifecycle:** Bridge amounts are reserved against the spending limit when the transaction is submitted. The reservation is released on terminal states (COMPLETED, FAILED, REFUNDED) but **held** on TIMEOUT to prevent double-spend during manual resolution. This means the spending budget is not freed until the bridge completes or fails definitively.
 
-## 17. Configuration via Admin Settings
+## 18. Configuration via Admin Settings
 
 Since v28.2, all action provider settings are managed via **Admin UI > DeFi (`#/defi`)** for DeFi providers and **Admin UI > Agent Identity (`#/agent-identity`)** for ERC-8004 (not config.toml). The Admin Settings UI provides:
 
 - **Enable/disable toggle** per provider (takes effect immediately, no daemon restart)
-- **API key management** (required for 0x Swap, optional for Jupiter Swap and LI.FI)
+- **API key management** (required for 0x Swap and LCX Liberty DEX, optional for Jupiter Swap and LI.FI)
 - **Slippage defaults** (default and max, in basis points for Jupiter/0x, in decimal for LI.FI)
 - **Provider-specific settings** (base URL, timeout, Jito tip, max price impact)
 
@@ -1899,7 +1978,7 @@ Operators can override the default security tier for individual actions. This al
 
 **Cross-reference:** Policy tier escalation rules apply on top of action tier. See **policies.skill.md** Section 3.
 
-## 18. Error Reference
+## 19. Error Reference
 
 | Code | HTTP | Description | Recovery |
 |------|------|-------------|----------|
@@ -1915,7 +1994,7 @@ Operators can override the default security tier for individual actions. This al
 | `INVALID_INSTRUCTION` | 400 | Chain not supported by LI.FI integration. | Use one of the supported chains: solana, ethereum, polygon, arbitrum, optimism, base. |
 | `ACTION_API_ERROR` | 502 | LI.FI API returned an error. | Check LI.FI API status, verify parameters, retry. |
 
-## 19. MCP Auto-Registration
+## 20. MCP Auto-Registration
 
 When a provider has `mcpExpose: true` in its metadata, the MCP server automatically registers each action as an MCP tool using the naming convention:
 
@@ -1926,6 +2005,7 @@ action_{provider_name}_{action_name}
 **Current MCP tools (26 action tools):**
 - `action_jupiter_swap_swap` -- Jupiter Swap on Solana
 - `action_zerox_swap_swap` -- 0x Swap on EVM chains
+- `action_lcx_liberty_swap_swap` -- LCX Liberty DEX swap on EVM chains (when enabled)
 - `action_lifi_cross_swap` -- LI.FI Cross-Chain Swap (multi-chain)
 - `action_lifi_bridge` -- LI.FI Cross-Chain Bridge (multi-chain)
 - `action_lido_staking_stake` -- Lido ETH to stETH staking (Ethereum)
@@ -1966,7 +2046,7 @@ MCP tool parameters:
 - `network` (optional string): Target network
 - `wallet_id` (optional string): Target wallet ID
 
-## 20. Related Skill Files
+## 21. Related Skill Files
 
 - **admin.skill.md** -- API key management, Admin Settings, daemon admin
 - **transactions.skill.md** -- 5-type transaction reference (actions execute as CONTRACT_CALL)

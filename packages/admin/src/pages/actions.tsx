@@ -22,6 +22,7 @@ const CATEGORY_ORDER = ['Swap', 'Bridge', 'Staking', 'Lending', 'Yield', 'Perp',
 const PROVIDER_ADVANCED_SETTINGS: Record<string, readonly string[]> = {
   jupiter_swap: ['jupiter_swap_default_slippage_bps', 'jupiter_swap_max_slippage_bps'],
   zerox_swap: ['zerox_swap_default_slippage_bps', 'zerox_swap_max_slippage_bps'],
+  lcx_liberty_swap: ['lcx_liberty_swap_default_slippage_bps', 'lcx_liberty_swap_max_slippage_bps'],
   aave_v3: ['aave_v3_health_factor_warning_threshold', 'aave_v3_position_sync_interval_sec', 'aave_v3_max_ltv_pct'],
   kamino: ['kamino_market', 'kamino_hf_threshold'],
   drift: ['drift_max_leverage', 'drift_max_position_usd', 'drift_margin_warning_threshold_pct', 'drift_position_sync_interval_sec'],

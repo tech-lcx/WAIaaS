@@ -57,6 +57,7 @@ updated: "2026-03-18"
 | defi-15 | DCent 크로스체인 스왑 (EVM→Solana) | ethereum-mainnet, solana-mainnet | mainnet | Yes | $5.00 | medium |
 | defi-16 | DCent Solana 네이티브 스왑 (SOL→USDC) | solana-mainnet | mainnet | Yes | $0.01 | medium |
 | defi-17 | XRPL DEX Swap (XRP→USD IOU) | xrpl-mainnet | mainnet | Yes | $0.01 | medium |
+| defi-18 | LCX Liberty DEX Swap (ETH→USDC) | base-mainnet | mainnet | Yes | $0.05 | medium |
 
 ### Admin-Ops
 | ID | Title | Network | Env | Funds | Cost | Risk |
@@ -103,7 +104,7 @@ updated: "2026-03-18"
 | solana-mainnet | mainnet-02, mainnet-04, defi-01, defi-06, defi-08, defi-10, defi-15, defi-16, admin-06, admin-07, admin-08 |
 | polygon-mainnet | mainnet-05, defi-02, defi-07, defi-13 |
 | arbitrum-mainnet | mainnet-05, defi-03, defi-04 |
-| base-mainnet | mainnet-05, mainnet-06, defi-04, advanced-02 |
+| base-mainnet | mainnet-05, mainnet-06, defi-04, defi-18, advanced-02 |
 | hyperliquid-mainnet | defi-11 |
 
 ## Quick Filters

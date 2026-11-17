@@ -191,6 +191,8 @@ const SLIPPAGE_BPS_KEYS = new Set([
   'jupiter_swap_max_slippage_bps',
   'zerox_swap_default_slippage_bps',
   'zerox_swap_max_slippage_bps',
+  'lcx_liberty_swap_default_slippage_bps',
+  'lcx_liberty_swap_max_slippage_bps',
   'pendle_yield_default_slippage_bps',
   'pendle_yield_max_slippage_bps',
   'dcent_swap_default_slippage_bps',
